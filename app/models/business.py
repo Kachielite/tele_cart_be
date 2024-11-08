@@ -10,11 +10,12 @@ class Business(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     identifier = Column(String, unique=True, index=True, nullable=False)
-    name = Column(String, index=True)
+    business_name = Column(String, index=True)
     description = Column(String)
     address = Column(String)
     phone_number = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
+    password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
     image_url = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.now)
