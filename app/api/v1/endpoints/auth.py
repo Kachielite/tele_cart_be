@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Depends
@@ -5,9 +6,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 from starlette import status
 
 from app.core.dependency import db_dependency
-from app.crud.crud_auth import create_business, auth_business, oauth2_bearer, get_current_business
-from app.schemas.auth_schema import AuthRequestSchema, AuthResponseSchema, CurrentBusinessResponse
-from app.schemas.general_response_schema import GeneralResponseSchema
+from app.crud.auth import create_business, auth_business, oauth2_bearer, get_current_business
+from app.schemas.auth import AuthRequestSchema, AuthResponseSchema, CurrentBusinessResponse
+from app.schemas.response import GeneralResponseSchema
+
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
