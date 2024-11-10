@@ -5,6 +5,9 @@ from fastapi import File
 
 from app.core.config import settings
 
+BUSINESS_IMAGES_FOLDER = "telecart/business_profiles"
+PRODUCT_IMAGES_FOLDER = "telecart/product_images"
+
 logger = logging.getLogger(__name__)
 
 
@@ -19,10 +22,13 @@ class ImageUtils:
         )
 
     @staticmethod
-    def upload_image(image: File):
+    def upload_image(image: File, upload_type: str):
         try:
-            logger.info(f"Uploading new image: {str(image.file)}")
-            image_url = cloudinary.uploader.upload(image.file, folder="telecart/business_profiles")
+            upload_folder = BUSINESS_IMAGES_FOLDER if upload_type == "business" else PRODUCT_IMAGES_FOLDER
+
+            logger.info(f"Uploading image: {image.filename}")
+            image_url = cloudinary.uploader.upload(image.file, folder=upload_folder)
+
             logger.info(f"Image uploaded successfully: {image_url['secure_url']}")
             return image_url["secure_url"]
         except Exception as e:

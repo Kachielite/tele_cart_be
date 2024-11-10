@@ -11,7 +11,7 @@ from app.schemas.auth import AuthRequestSchema, AuthResponseSchema, CurrentBusin
 from app.schemas.response import GeneralResponseSchema
 
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+router = APIRouter(prefix="/v1/auth", tags=["Authentication"])
 
 
 @router.post("/create", status_code=status.HTTP_201_CREATED, response_model=GeneralResponseSchema)

@@ -6,7 +6,7 @@ from app.core.dependency import auth_required, db_dependency
 from app.crud.category import fetch_categories, fetch_category_by_id
 from app.schemas.category import CategoryResponse
 
-router = APIRouter(prefix="/category", tags=["Category"])
+router = APIRouter(prefix="/v1/category", tags=["Category"])
 
 # Read all categories
 @router.get("/", status_code=200, response_model=List[CategoryResponse], dependencies=[Depends(auth_required)])

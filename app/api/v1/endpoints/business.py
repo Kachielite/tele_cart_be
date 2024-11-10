@@ -7,7 +7,7 @@ from app.crud.business import business_details, update_business, update_business
 from app.schemas.business import BusinessResponseSchema, BusinessRequestSchema
 from app.schemas.response import GeneralResponseSchema
 
-router = APIRouter(prefix="/business", tags=["Manage Business"])
+router = APIRouter(prefix="/v1/business", tags=["Manage Business"])
 
 # Fetch business details
 @router.get("/", status_code=200, response_model=BusinessResponseSchema, dependencies=[Depends(auth_required)])

@@ -11,7 +11,7 @@ from app.utils.identifier_generator import identifier_generator
 
 logger = logging.getLogger(__name__)
 
-oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/auth/token", scheme_name="JWT")
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/v1/auth/token", scheme_name="JWT")
 
 def create_business(business: AuthRequestSchema, db: Session):
     logger.info("Creating business with the following details: %s %s %s", business.business_name, business.email, business.phone_number)

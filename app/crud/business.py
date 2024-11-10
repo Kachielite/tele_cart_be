@@ -91,7 +91,7 @@ def update_business_image(business_id: int, image: File, db: Session):
     # Upload the new image
     try:
         logger.info("Uploading new image")
-        new_image_url = image_utils.upload_image(image)
+        new_image_url = image_utils.upload_image(image, "business")
         business_to_update.image_url = new_image_url
     except Exception as e:
         logger.error(f"Failed to upload new image: {str(e)}")
