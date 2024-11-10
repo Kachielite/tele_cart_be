@@ -6,7 +6,7 @@ from app.db.base import Base
 
 
 class Customer(Base):
-    __tablename__ = "customer"
+    __tablename__ = "customers"
 
     id = Column(Integer, primary_key=True, index=True)
     telegram_id = Column(Integer, index=True)

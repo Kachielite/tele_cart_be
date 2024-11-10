@@ -1,16 +1,15 @@
 from enum import Enum
 
-
 class OrderStatus(str, Enum):
-    PENDING = "pending"
-    ACCEPTED = "accepted"
-    REJECTED = "rejected"
-    CANCELLED = "cancelled"
-    COMPLETED = "completed"
-    REFUNDED = "refunded"
-    RETURNED = "returned"
-    EXCHANGED = "exchanged"
-    SHIPPED = "shipped"
-    DELIVERED = "delivered"
-    FAILED = "failed"
-    UNKNOWN = "unknown"
+    pending = "pending"
+    accepted = "accepted"
+    rejected = "rejected"
+    cancelled = "cancelled"
+    completed = "completed"
+    refunded = "refunded"
+    returned = "returned"
+    exchanged = "exchanged"
+    shipped = "shipped"
+    delivered = "delivered"
+    failed = "failed"
+    unknown = "unknown"
