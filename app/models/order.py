@@ -7,12 +7,12 @@ from app.enums.order_status import OrderStatus
 
 
 class Order(Base):
-    __tablename__ = "order"
+    __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
-    customer_id = Column(Integer, ForeignKey("customer.id"), index=True)
-    business_id = Column(Integer, ForeignKey("business.id"), index=True)
-    status = Column(Enum(OrderStatus), index=True, default=OrderStatus.PENDING)
+    customers_id = Column(Integer, ForeignKey("customers.id"), index=True)
+    businesses_id = Column(Integer, ForeignKey("businesses.id"), index=True)
+    status = Column(Enum(OrderStatus), index=True, default=OrderStatus.pending)
     total = Column(Float, nullable=False)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)

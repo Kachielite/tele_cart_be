@@ -6,7 +6,7 @@ from app.db.base import Base
 
 
 class OrderItems(Base):
-    __tablename__ = 'order_item'
+    __tablename__ = 'order_items'
     id = Column(Integer, primary_key=True)
     orders_id = Column(Integer, ForeignKey('orders.id'))
     products_id = Column(Integer, ForeignKey('products.id'))
