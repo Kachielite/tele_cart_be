@@ -35,6 +35,30 @@ def business_details(business_id: int, db: Session):
     logger.info(f"Business details fetched successfully for business_id: {business_id}")
     return 200, fetched_business
 
+# Fetch business by identifier
+def business_by_identifier(identifier: str, db: Session):
+    logger.info(f"Fetching business details for identifier: {identifier}")
+    business = db.query(Business).filter(Business.identifier == identifier).first()
+
+    if business is None:
+        logger.error(f"Business not found for identifier: {identifier}")
+        return 404, {"message": "Business not found"}
+
+    fetched_business = {
+        "id": business.id,
+        "identifier": business.identifier,
+        "name": business.business_name,
+        "address": business.address,
+        "phone_number" : business.phone_number,
+        "description" : business.description,
+        "image_url" : business.image_url,
+        "created_at" : business.created_at.isoformat(timespec='milliseconds') + 'Z',
+        "updated_at" : business.updated_at.isoformat(timespec='milliseconds') + 'Z',
+    }
+
+    logger.info(f"Business details fetched successfully for identifier: {identifier}")
+    return 200, fetched_business
+
 
 # Update business details
 def update_business(business_id: int, business: BusinessRequestSchema, db: Session):

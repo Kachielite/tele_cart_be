@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 
 from app.core.dependency import auth_required, db_dependency
-from app.crud.business import business_details, update_business, update_business_image
+from app.crud.business import business_details, update_business, update_business_image, business_by_identifier
 from app.schemas.business import BusinessResponseSchema, BusinessRequestSchema
 from app.schemas.response import GeneralResponseSchema
 
@@ -16,6 +16,7 @@ async def get_business_details(db: db_dependency, business_id: int = Depends(aut
     if code != 200:
         raise HTTPException(status_code=code, detail=response["message"])
     return response
+
 
 
 # Update business details

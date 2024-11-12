@@ -1,9 +1,11 @@
 import asyncio
-
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
+from sqlalchemy.orm import Session
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
-
 from app.core.config import settings
+from app.core.dependency import db_dependency
+from app.crud.business import business_by_identifier
+from app.db.session import get_db
 
 # Sample business data
 businesses = {
@@ -15,36 +17,68 @@ businesses = {
 session_data = {}
 
 
+# Start command handler
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     args = context.args
 
+    # Use a session directly with `next`
+    db = next(get_db())  # Using `next()` to fetch one instance from the generator
+
+    # Check if there’s a business identifier
     # Check if there’s a business identifier
     if args:
         business_id = args[0]
-        if business_id in businesses:
+        status, business = business_by_identifier(business_id, db)
+
+        if status == 200:
             session_data[chat_id] = business_id
-            business_name = businesses[business_id]["name"]
+            business_name = business["name"]
+            business_description = business["description"]
+            business_image_url = business["image_url"]
+
+            # Set up a more enticing welcome message
+            welcome_message = (
+                f"✨ Welcome to *{business_name}*! ✨\n\n"
+                f"{business_description or 'Discover an exciting range of products and exclusive offers here.'}\n\n"
+                "Tap an option below to explore our offerings and enjoy a delightful shopping experience!"
+            )
 
             # Inline keyboard for first-time actions
             keyboard = [
-                [InlineKeyboardButton("View Products", callback_data='view_products')],
-                [InlineKeyboardButton("Place Order", callback_data='place_order')],
+                [InlineKeyboardButton("🛍 View Products", callback_data='view_products')],
+                [InlineKeyboardButton("🛒 View Cart", callback_data='view_cart')],
+                [InlineKeyboardButton("🚀 Track Order", callback_data='place_order')],
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
 
-            # Send welcome message with inline buttons
-            await context.bot.send_message(
-                chat_id=chat_id,
-                text=f"Welcome to {business_name}! Choose an option below to get started.",
-                reply_markup=reply_markup
-            )
+            # Send business image first if available, then the welcome message
+            if business_image_url:
+                await context.bot.send_photo(
+                    chat_id=chat_id,
+                    photo=business_image_url,
+                    caption=welcome_message,
+                    reply_markup=reply_markup,
+                    parse_mode="Markdown"  # Enables basic Markdown for bold/italic styling
+                )
+            else:
+                # Send the message without an image if no image URL is available
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text=welcome_message,
+                    reply_markup=reply_markup,
+                    parse_mode="Markdown"
+                )
         else:
             await context.bot.send_message(chat_id=chat_id, text="Invalid business link. Please try again.")
     else:
         await context.bot.send_message(chat_id=chat_id, text="Please start with a valid business link.")
 
+    # Close session after query
+    db.close()
 
+
+# Button handler for inline button interactions
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -54,15 +88,18 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     business_id = session_data.get(chat_id)
 
     # Check which button was pressed
-    if query.data == 'view_products':
+    if query.data == 'view_products' and business_id:
         products = businesses[business_id]["products"]
         product_list = "\n".join(products)
         await context.bot.send_message(chat_id=chat_id, text=f"Available products:\n{product_list}")
     elif query.data == 'place_order':
         await context.bot.send_message(chat_id=chat_id, text="To place an order, please type the product name.")
 
+# Error handler for better error management
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
+    print(f"An error occurred: {context.error}")
 
-# Register the bot handlers
+# Function to register handlers and run the bot
 async def run_bot():
     application = Application.builder().token(settings.telegram_token).build()
 
@@ -70,15 +107,20 @@ async def run_bot():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(button_handler))
 
+    # Add error handler
+    application.add_error_handler(error_handler)
+
     # Start the bot
     await application.initialize()
     await application.start()
     await application.updater.start_polling()
     await application.updater.idle()
 
+# Main function to start the event loop
 def main():
     loop = asyncio.get_event_loop()
     loop.create_task(run_bot())
 
 if __name__ == '__main__':
     main()
+
