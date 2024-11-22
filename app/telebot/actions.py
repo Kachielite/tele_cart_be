@@ -2,11 +2,15 @@
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 
 
-def get_main_menu_keyboard():
-    return InlineKeyboardMarkup([
+async def get_main_menu_keyboard(chat_id, context):
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text="Welcome back to the main menu.\n\nTap an option below to explore our offerings and enjoy a delightful shopping experience!",
+        reply_markup=InlineKeyboardMarkup([
         [InlineKeyboardButton("🛍 View Products", callback_data='view_products')],
         [InlineKeyboardButton("🛒 View Cart", callback_data='view_cart')],
-        [InlineKeyboardButton("🚀 Place Order", callback_data='place_order')]])
+    ])
+    )
 
 # Keyboard with "Back to Main Menu" for subsequent menus
 def get_menu_with_back_button():

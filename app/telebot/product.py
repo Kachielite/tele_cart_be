@@ -7,11 +7,8 @@ from app.telebot.actions import get_menu_with_back_button
 
 
 # Option: View Products - Show categories
-async def view_products(business_identifier, update: Update):
+async def view_products(business_identifier, chat_id, context):
     db = next(get_db())  # Get a database session
-
-    query = update.callback_query
-    await query.answer()
 
     # Fetch categories with products
     status, categories = get_categories_with_products(business_identifier, db)
@@ -23,44 +20,36 @@ async def view_products(business_identifier, update: Update):
         ]
         category_buttons.append([InlineKeyboardButton("⬅️ Back to Main Menu", callback_data='close_menu')])
 
-        # Attempt to edit the message if it exists; otherwise, send a new message
-        if query.message and query.message.text:
-            # Edit the existing message
-            await query.edit_message_text(
-                text="✨ Ready to dive into our product collection? ✨\n\nChoose a category below and discover top picks tailored just for you!",
-                reply_markup=InlineKeyboardMarkup(category_buttons)
-            )
-        else:
-            # Fallback: send a new message if there's no message to edit
-            await update.effective_chat.send_message(
-                text="✨ Ready to dive into our product collection? ✨\n\nChoose a category below and discover top picks tailored just for you!",
-                reply_markup=InlineKeyboardMarkup(category_buttons)
-            )
+        # Send the list of category first\
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="✨ Ready to dive into our product collection? ✨\n\nChoose a category below and discover top picks tailored just for you!",
+            reply_markup=InlineKeyboardMarkup(category_buttons)
+        )
 
     elif status == 404:
         # No categories found
-        await query.edit_message_text(
+        await context.bot.send_message(
+            chat_id=chat_id,
             text="No categories with products found.",
             reply_markup=get_menu_with_back_button()
         )
 
     else:
         # Error case
-        await query.edit_message_text(
+        await context.bot.send_message(
+            chat_id=chat_id,
             text="An error occurred. Please try again later.",
             reply_markup=get_menu_with_back_button()
         )
-
-    print("callback_query", update.callback_query)
 
     db.close()
 
 
 
 # Show products in a selected category
-async def view_products_in_category(business_identifier: str, update: Update, context):
+async def view_products_in_category(business_identifier: str, chat_id, update: Update, context):
     query = update.callback_query
-    await query.answer()
 
     # Extract category_id from the callback data
     callback_data = query.data  # e.g., "category_3"
@@ -78,12 +67,14 @@ async def view_products_in_category(business_identifier: str, update: Update, co
 
         product_buttons.append([InlineKeyboardButton("⬅️ Back to Categories", callback_data='view_products')])
 
-        await query.edit_message_text(
+        await context.bot.send_message(
+            chat_id=chat_id,
             text="✨ Here are some fantastic products just for you! ✨\nSelect a product for more details:",
             reply_markup=InlineKeyboardMarkup(product_buttons)
         )
     else:
-        await query.edit_message_text(
+        await context.bot.send_message(
+            chat_id=chat_id,
             text="No products found in this category. Please choose a different category.",
             reply_markup=get_menu_with_back_button()
         )
@@ -91,9 +82,7 @@ async def view_products_in_category(business_identifier: str, update: Update, co
 
 
 # Show details for a selected product
-async def show_product_details(business_identifier: str, product_id, update: Update):
-    query = update.callback_query
-    await query.answer()
+async def show_product_details(business_identifier: str, chat_id, context, product_id):
 
     db = next(get_db())
     status, product = read_product(db, product_id, business_identifier)
@@ -105,22 +94,26 @@ async def show_product_details(business_identifier: str, product_id, update: Upd
                           f"💲 *Price*: ${product['price']}\n" \
                           f"📦 *In Stock*: {'Yes' if product['in_stock'] else 'No'}"
 
-        await query.message.reply_photo(
+        await context.bot.send_photo(
+            chat_id=chat_id,
             photo=product['image_url'],
             caption=product_details,
             parse_mode='Markdown',
             reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🛒 Add to Cart", callback_data='view_cart')],
                 [InlineKeyboardButton("⬅️ Back to Products", callback_data=f'category_{product['category_id']}')],
                 [InlineKeyboardButton("⬅️ Back to Main Menu", callback_data='close_menu')]
             ])
         )
     elif status == 404:
-        await query.edit_message_text(
+        await context.bot.send_message(
+            chat_id=chat_id,
             text="Hmm, we couldn’t find that product. Please select another one.",
             reply_markup=get_menu_with_back_button()
         )
     else:
-        await query.edit_message_text(
+        await context.bot.send_message(
+            chat_id=chat_id,
             text="An error occurred. Please try again later.",
             reply_markup=get_menu_with_back_button()
         )

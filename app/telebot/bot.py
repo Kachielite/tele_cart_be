@@ -1,13 +1,12 @@
 import asyncio
 from re import match
 
-from sqlalchemy.orm import Session
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from app.core.config import settings
-from app.core.dependency import db_dependency
 from app.crud.business import business_by_identifier
 from app.db.session import get_db
+from app.telebot.actions import get_main_menu_keyboard
 from app.telebot.product import view_products, view_products_in_category, show_product_details
 
 # Sample business data
@@ -18,6 +17,8 @@ businesses = {
 
 # Temporary session data for user interactions
 session_data = {}
+
+# https://t.me/e_cart24_bot?start=ISHF81A
 
 
 # Start command handler
@@ -91,12 +92,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Check which button was pressed
     if query.data == 'view_products' and business_identifier:
-        await view_products(business_identifier, update)
+        await view_products(business_identifier, chat_id, context)
     elif match(r'^category_\d+$', query.data):
-        await view_products_in_category(business_identifier, update, context)
+        await view_products_in_category(business_identifier, chat_id, update, context)
     elif match(r'^product_\d+$', query.data):
         product_id = int(query.data.split('_')[1])
-        await show_product_details(business_identifier, product_id, update)
+        await show_product_details(business_identifier, chat_id, context, product_id)
+    elif query.data == 'close_menu':
+        await get_main_menu_keyboard(chat_id, context)
 
 
 
