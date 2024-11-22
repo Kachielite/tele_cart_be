@@ -2,7 +2,7 @@ import logging.config
 
 from fastapi import FastAPI
 
-from app.crud.telegram_bot import main as telegram_bot_main
+from app.telebot.bot import main as telegram_bot_main
 from app.api.v1.endpoints import auth, health, business, category, product, order
 from app.db.base import Base
 from app.db.session import engine

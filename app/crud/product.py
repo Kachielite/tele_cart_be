@@ -154,3 +154,34 @@ def remove_product(db: Session, product_id: int, business_id: int):
     logger.info("Product deleted")
 
     return 200, {"message": "Product deleted successfully"}
+
+
+# List Products in a given Category for a Business
+def get_products_in_category(business_identifier: str, category_id: int, db: Session):
+    logger.info("Fetching Products in Category for Business ID: %s and Category ID: %s", business_identifier, category_id)
+
+    business_id = db.query(Business).filter(Business.identifier == business_identifier).first().id
+
+    if not business_id:
+        return 404, {"message": "Business not found"}
+
+    products = db.query(Product).filter(
+        Product.businesses_id == business_id,
+        Product.category_id == category_id
+    ).all()
+
+    if not products:
+        return 404, {"message": "No products found in this category for the given business"}
+
+    product_list = [{
+        "id": product.id,
+        "name": product.name,
+        "description": product.description,
+        "price": product.price,
+        "in_stock": product.in_stock,
+        "image_url": product.image_url,
+        "created_at": product.created_at.isoformat(timespec='milliseconds') + 'Z',
+        "updated_at": product.updated_at.isoformat(timespec='milliseconds') + 'Z',
+    } for product in products]
+
+    return 200, product_list
