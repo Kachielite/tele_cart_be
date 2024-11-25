@@ -100,7 +100,7 @@ async def show_product_details(business_identifier: str, chat_id, context, produ
             caption=product_details,
             parse_mode='Markdown',
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🛒 Add to Cart", callback_data='view_cart')],
+                [InlineKeyboardButton("🛒 Add to Cart", callback_data=f'cart_{product_id}')],
                 [InlineKeyboardButton("⬅️ Back to Products", callback_data=f'category_{product['category_id']}')],
                 [InlineKeyboardButton("⬅️ Back to Main Menu", callback_data='close_menu')]
             ])

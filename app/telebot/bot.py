@@ -7,13 +7,8 @@ from app.core.config import settings
 from app.crud.business import business_by_identifier
 from app.db.session import get_db
 from app.telebot.actions import get_main_menu_keyboard
+from app.telebot.cart import add_to_cart, view_cart, list_cart_items, clear_cart, remove_item
 from app.telebot.product import view_products, view_products_in_category, show_product_details
-
-# Sample business data
-businesses = {
-    "business123": {"name": "Fashion Store", "products": ["T-shirt", "Jeans", "Cap"]},
-    "tech456": {"name": "Tech Gadgets", "products": ["Smartphone", "Tablet", "Headphones"]}
-}
 
 # Temporary session data for user interactions
 session_data = {}
@@ -26,6 +21,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     args = context.args
 
+    print(update.effective_chat)
+    print(update)
     # Use a session directly with `next`
     db = next(get_db())  # Using `next()` to fetch one instance from the generator
 
@@ -98,6 +95,18 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif match(r'^product_\d+$', query.data):
         product_id = int(query.data.split('_')[1])
         await show_product_details(business_identifier, chat_id, context, product_id)
+    elif match(r'^cart_\d+$', query.data):
+        cart_product_id = int(query.data.split('_')[1])
+        await add_to_cart(business_identifier, cart_product_id, chat_id, update.effective_chat, context)
+    elif query.data == "view_cart":
+        await view_cart(chat_id, update.effective_chat, context)
+    elif query.data == "delete_item":
+        await list_cart_items(chat_id, update.effective_chat, context)
+    elif match(r'^remove_\d+$', query.data):
+        id = int(query.data.split('_')[1])
+        await remove_item(chat_id, id, update.effective_chat, context)
+    elif query.data == "clear_cart":
+        await clear_cart(chat_id, update.effective_chat, context)
     elif query.data == 'close_menu':
         await get_main_menu_keyboard(chat_id, context)
 

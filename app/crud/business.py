@@ -4,8 +4,6 @@ from fastapi import File
 from sqlalchemy.orm import Session
 
 from app.models.business import Business
-from app.models.category import Category
-from app.models.product import Product
 from app.schemas.business import BusinessRequestSchema
 from app.utils.image import ImageUtils
 
