@@ -1,20 +1,19 @@
 import asyncio
-from sqlalchemy.orm import Session
+from re import match
+
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from app.core.config import settings
-from app.core.dependency import db_dependency
 from app.crud.business import business_by_identifier
 from app.db.session import get_db
-
-# Sample business data
-businesses = {
-    "business123": {"name": "Fashion Store", "products": ["T-shirt", "Jeans", "Cap"]},
-    "tech456": {"name": "Tech Gadgets", "products": ["Smartphone", "Tablet", "Headphones"]}
-}
+from app.telebot.actions import get_main_menu_keyboard
+from app.telebot.cart import add_to_cart, view_cart, list_cart_items, clear_cart, remove_item
+from app.telebot.product import view_products, view_products_in_category, show_product_details
 
 # Temporary session data for user interactions
 session_data = {}
+
+# https://t.me/e_cart24_bot?start=ISHF81A
 
 
 # Start command handler
@@ -22,17 +21,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     args = context.args
 
+    print(update.effective_chat)
+    print(update)
     # Use a session directly with `next`
     db = next(get_db())  # Using `next()` to fetch one instance from the generator
 
     # Check if there’s a business identifier
-    # Check if there’s a business identifier
     if args:
-        business_id = args[0]
-        status, business = business_by_identifier(business_id, db)
+        business_identifier = args[0]
+        status, business = business_by_identifier(business_identifier, db)
 
         if status == 200:
-            session_data[chat_id] = business_id
+            session_data[chat_id] = business_identifier
             business_name = business["name"]
             business_description = business["description"]
             business_image_url = business["image_url"]
@@ -44,7 +44,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "Tap an option below to explore our offerings and enjoy a delightful shopping experience!"
             )
 
-            # Inline keyboard for first-time actions
+            # Inline keyboard for first-time actions.py
             keyboard = [
                 [InlineKeyboardButton("🛍 View Products", callback_data='view_products')],
                 [InlineKeyboardButton("🛒 View Cart", callback_data='view_cart')],
@@ -85,15 +85,32 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Retrieve user business context
     chat_id = query.message.chat_id
-    business_id = session_data.get(chat_id)
+    business_identifier = session_data.get(chat_id)
 
     # Check which button was pressed
-    if query.data == 'view_products' and business_id:
-        products = businesses[business_id]["products"]
-        product_list = "\n".join(products)
-        await context.bot.send_message(chat_id=chat_id, text=f"Available products:\n{product_list}")
-    elif query.data == 'place_order':
-        await context.bot.send_message(chat_id=chat_id, text="To place an order, please type the product name.")
+    if query.data == 'view_products' and business_identifier:
+        await view_products(business_identifier, chat_id, context)
+    elif match(r'^category_\d+$', query.data):
+        await view_products_in_category(business_identifier, chat_id, update, context)
+    elif match(r'^product_\d+$', query.data):
+        product_id = int(query.data.split('_')[1])
+        await show_product_details(business_identifier, chat_id, context, product_id)
+    elif match(r'^cart_\d+$', query.data):
+        cart_product_id = int(query.data.split('_')[1])
+        await add_to_cart(business_identifier, cart_product_id, chat_id, update.effective_chat, context)
+    elif query.data == "view_cart":
+        await view_cart(chat_id, update.effective_chat, context)
+    elif query.data == "delete_item":
+        await list_cart_items(chat_id, update.effective_chat, context)
+    elif match(r'^remove_\d+$', query.data):
+        id = int(query.data.split('_')[1])
+        await remove_item(chat_id, id, update.effective_chat, context)
+    elif query.data == "clear_cart":
+        await clear_cart(chat_id, update.effective_chat, context)
+    elif query.data == 'close_menu':
+        await get_main_menu_keyboard(chat_id, context)
+
+
 
 # Error handler for better error management
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
@@ -106,6 +123,7 @@ async def run_bot():
     # Add command and callback handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(button_handler))
+
 
     # Add error handler
     application.add_error_handler(error_handler)

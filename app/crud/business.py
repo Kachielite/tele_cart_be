@@ -7,9 +7,11 @@ from app.models.business import Business
 from app.schemas.business import BusinessRequestSchema
 from app.utils.image import ImageUtils
 
+BUSINESS_NOT_FOUND = "Business not found"
+
 logger = logging.getLogger(__name__)
 
-BUSINESS_NOT_FOUND = "Business not found"
+
 
 # Fetch business details
 def business_details(business_id: int, db: Session):
@@ -58,6 +60,8 @@ def business_by_identifier(identifier: str, db: Session):
 
     logger.info(f"Business details fetched successfully for identifier: {identifier}")
     return 200, fetched_business
+
+
 
 
 # Update business details
